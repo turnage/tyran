@@ -1,14 +1,23 @@
 .global _start
 
-.set MULTIBOOTC, 0x1badb002
-.set FLAGS, 0
-.set CHECKSUM, -(MULTIBOOTC + FLAGS)
+.set MULTIBOOT2C, 0xe85250d6
+.set ARCH, 0 # Protected mode
+.set HEADER_SIZE, (header_end - header_start)
+.set MIDCHECKSUM, MULTIBOOT2C + ARCH + HEADER_SIZE
+.set CHECKSUM, 0x100000000 - MIDCHECKSUM
 
 .section .multiboot
+header_start:
 .align 4
-.long MULTIBOOTC
-.long FLAGS
+.long MULTIBOOT2C
+.long ARCH
+.long HEADER_SIZE
 .long CHECKSUM
+
+.short 0
+.short 0
+.long 8
+header_end:
 
 .section .bss
 .align 16

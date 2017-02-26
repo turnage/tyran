@@ -7,9 +7,9 @@ MODE:=release
 
 iso: ${OUTDIR}/kernel.iso
 
-cargo: ${OUTDIR}/libboot.a ${OUTDIR}/kernel.o
+cargo: ${OUTDIR}/libboot.a
 	xargo build --release --target ${TARGET} --verbose
-	grub-file --is-x86-multiboot ${OUTDIR}/${TARGET}/${MODE}/tyran
+	grub-file --is-x86-multiboot2 ${OUTDIR}/${TARGET}/${MODE}/tyran
 
 run: iso
 	qemu-system-i386 -cdrom ${OUTDIR}/kernel.iso -curses
@@ -28,14 +28,6 @@ ${OUTDIR}/boot.o: src/asm/boot.asm ${OUTDIR}
 
 ${OUTDIR}/libboot.a: ${OUTDIR}/boot.o
 	ar crus ${OUTDIR}/libboot.a ${OUTDIR}/boot.o
-
-${OUTDIR}/kernel.o: src/kernel.c ${OUTDIR}
-	clang --target=${TARGET} ${CFLAGS} -c src/kernel.c -o ${OUTDIR}/kernel.o -ggdb
-
-${OUTDIR}/kernel.bin: ${OUTDIR}/kernel.o ${OUTDIR}/boot.o layout.ld
-	clang --target=${TARGET} ${CFLAGS} ${OUTDIR}/boot.o ${OUTDIR}/kernel.o \
-		-T layout.ld -o ${OUTDIR}/kernel.bin
-	grub-file --is-x86-multiboot ${OUTDIR}/kernel.bin
 
 ${OUTDIR}/kernel.iso: cargo grub.cfg
 	mkdir -p ${OUTDIR}/iso/boot/grub
