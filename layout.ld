@@ -3,7 +3,7 @@ ENTRY(_start)
 SECTIONS {
 	. = 1M;
 
-	.multiboot BLOCK(0x1000) : ALIGN(32) {
+	.multiboot BLOCK(256) : ALIGN(32) {
 		*(.multiboot)
 	}
 
@@ -22,5 +22,9 @@ SECTIONS {
 	.bss BLOCK(0x1000) : ALIGN(0x1000) {
 		*(COMMON)
 		*(.bss)
+	}
+
+	/DISCARD/ : {
+		*(.note.gnu.*)
 	}
 }
