@@ -30,8 +30,8 @@ ${OUTDIR}/libboot.a: ${OUTDIR}/boot.o
 	ar crus ${OUTDIR}/libboot.a ${OUTDIR}/boot.o
 	grub-file --is-x86-multiboot2 ${OUTDIR}/libboot.a
 
-${OUTDIR}/kernel.iso: cargo grub.cfg
+${OUTDIR}/kernel.iso: cargo src/res/grub.cfg
 	mkdir -p ${OUTDIR}/iso/boot/grub
-	cp grub.cfg ${OUTDIR}/iso/boot/grub
+	cp src/res/grub.cfg ${OUTDIR}/iso/boot/grub
 	cp ${OUTDIR}/${TARGET}/${MODE}/tyran ${OUTDIR}/iso/boot
 	grub-mkrescue -o ${OUTDIR}/kernel.iso ${OUTDIR}/iso
