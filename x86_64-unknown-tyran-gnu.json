@@ -15,7 +15,7 @@
 		"-Wl,-n",
 		"-nostartfiles"
 	],
-	"post-link-args": ["-lc", "target/kernel.o"],
+	"post-link-args": ["-lc"],
 	"disable-redzone": true,
 	"eliminate-frame-pointer": false
 }
