@@ -1,33 +1,64 @@
-.global _start
+MULTIBOOT2C equ 0xe85250d6
+ARCH equ 0 ; Protected mode
+HEADER_SIZE equ (header_end - header_start)
+MIDCHECKSUM equ (MULTIBOOT2C + ARCH + HEADER_SIZE)
+CHECKSUM equ (0x100000000 - MIDCHECKSUM)
 
-# Multiboot 2 Header Constants
-.set MULTIBOOT2C, 0xe85250d6
-.set ARCH, 0 # Protected mode
-.set HEADER_SIZE, (header_end - header_start)
-.set MIDCHECKSUM, MULTIBOOT2C + ARCH + HEADER_SIZE
-.set CHECKSUM, 0x100000000 - MIDCHECKSUM
-
-.section .multiboot
+section .boot
 header_start:
-.align 4
-.long MULTIBOOT2C
-.long ARCH
-.long HEADER_SIZE
-.long CHECKSUM
+	dd  MULTIBOOT2C
+	dd  ARCH
+	dd  HEADER_SIZE
+	dd  CHECKSUM
 
-.short 0
-.short 0
-.long 8
+	dw 0
+	dw 0
+	dd 8
 header_end:
 
-.section .bss
-.align 16
+section .bss
+; Stack
+align 16
 stack_bottom:
-.skip 16384
+	resb 16384
 stack_top:
 
-.section .text
+; Page tables (first 1GB)
+align 4096
+pml4:
+	resb 4096
+pdpt:
+	resb 4096
+pdt:
+	resb 4096
+
+section .text
+
+
+global _start
 _start:
-	mov $stack_top, %esp
+	mov esp, stack_top
+	extern kernel_main
 	call kernel_main
 	hlt
+
+init_paging:
+	PRESENT equ 0b1
+	WRITEABLE equ 0b10
+	DEFAULT_FLAGS equ (PRESENT + WRITEABLE)
+	HUGE_PAGE equ 0b10000000
+
+	mov eax, pdpt
+	or eax, 0b11
+	mov [pml4], eax
+
+	mov eax, pdt
+	or eax, 0b11
+	mov [pdt], eax
+
+.map_pdt:
+	mov eax, 0x200000
+	mul ecx
+	or eax, 0b1000011
+
+	ret

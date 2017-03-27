@@ -3,23 +3,23 @@ ENTRY(_start)
 SECTIONS {
 	. = 1M;
 
-	.multiboot BLOCK(256) : ALIGN(32) {
-		*(.multiboot)
+	.boot : {
+		KEEP(*(.boot))
 	}
 
-	.text BLOCK(0x1000) : ALIGN(0x1000) {
+	.text : {
 		*(.text)
 	}
 
-	.rodata BLOCK(0x1000) : ALIGN(0x1000) {
+	.rodata : {
 		*(.rodata)
 	}
 
-	.data BLOCK(0x1000) : ALIGN(0x1000) {
+	.data : {
 		*(.data)
 	}
 
-	.bss BLOCK(0x1000) : ALIGN(0x1000) {
+	.bss : {
 		*(COMMON)
 		*(.bss)
 	}

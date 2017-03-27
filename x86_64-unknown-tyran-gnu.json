@@ -13,7 +13,9 @@
 	"pre-link-args": [
 		"-Tlayout.ld",
 		"-Wl,-n",
-		"-nostartfiles"
+		"-nostartfiles",
+		"-static",
+		"-v"
 	],
 	"post-link-args": ["-lc"],
 	"disable-redzone": true,

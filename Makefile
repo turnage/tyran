@@ -24,7 +24,7 @@ ${OUTDIR}:
 	mkdir target
 
 ${OUTDIR}/boot.o: src/asm/boot.asm ${OUTDIR}
-	clang --target=${TARGET} -c src/asm/boot.asm -o ${OUTDIR}/boot.o -ggdb
+	nasm -felf64 src/asm/boot.asm -o ${OUTDIR}/boot.o -ggdb
 	grub-file --is-x86-multiboot2 ${OUTDIR}/boot.o
 
 ${OUTDIR}/libboot.a: ${OUTDIR}/boot.o
