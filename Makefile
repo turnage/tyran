@@ -1,9 +1,11 @@
-PHONY: all run clean cargo debug
+.PHONY: all clean cargo debug iso
 
 OUTDIR:=target
 TARGET:=x86_64-unknown-tyran-gnu
 CFLAGS:=-ffreestanding -nostdlib -lc
 MODE:=release
+
+all: iso
 
 iso: ${OUTDIR}/kernel.iso
 
@@ -12,9 +14,6 @@ cargo: ${OUTDIR}/libboot.a
 	grub-file --is-x86-multiboot2 ${OUTDIR}/${TARGET}/${MODE}/tyran
 
 run: iso
-	qemu-system-i386 -cdrom ${OUTDIR}/kernel.iso -curses
-
-debug: iso
 	qemu-system-i386 -cdrom ${OUTDIR}/kernel.iso -curses -s
 
 clean:
