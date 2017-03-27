@@ -25,9 +25,11 @@ ${OUTDIR}:
 
 ${OUTDIR}/boot.o: src/asm/boot.asm ${OUTDIR}
 	clang --target=${TARGET} -c src/asm/boot.asm -o ${OUTDIR}/boot.o -ggdb
+	grub-file --is-x86-multiboot2 ${OUTDIR}/boot.o
 
 ${OUTDIR}/libboot.a: ${OUTDIR}/boot.o
 	ar crus ${OUTDIR}/libboot.a ${OUTDIR}/boot.o
+	grub-file --is-x86-multiboot2 ${OUTDIR}/libboot.a
 
 ${OUTDIR}/kernel.iso: cargo grub.cfg
 	mkdir -p ${OUTDIR}/iso/boot/grub

@@ -1,5 +1,6 @@
 .global _start
 
+# Multiboot 2 Header Constants
 .set MULTIBOOT2C, 0xe85250d6
 .set ARCH, 0 # Protected mode
 .set HEADER_SIZE, (header_end - header_start)
