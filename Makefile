@@ -14,7 +14,7 @@ cargo: ${OUTDIR}/libboot.a
 	grub-file --is-x86-multiboot2 ${OUTDIR}/${TARGET}/${MODE}/tyran
 
 run: iso
-	qemu-system-i386 -cdrom ${OUTDIR}/kernel.iso -curses -s
+	qemu-system-x86_64 -cdrom ${OUTDIR}/kernel.iso -curses -s
 
 clean:
 	-rm -rf target

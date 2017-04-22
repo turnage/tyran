@@ -39,6 +39,7 @@ _start:
 	mov esp, stack_top
 	call check_multiboot
 	call check_cpuid
+	call check_longmode
 	call kernel_main
 	hlt
 
@@ -53,26 +54,47 @@ check_multiboot:
 	jmp error
 
 check_cpuid:
-    pushfq
-    pop rax ; Load RFLAGS into rax
-    mov rcx, rax ; store a copy in rcx
-    xor rax, 1 << 21 ; flip the 21st bit (CPUID)
-    push rax
-    popfq ; attempt to write it back with bit flipped
-    pushfq
-    pop rax ; read the value again to
-    push rcx
-    popfq ; write the old value back, in case our flip succeeded
-    cmp rax, rcx ; compare the retrieved value with our copy; iff the bit flipped CPUID is supported
-    je .cpuid_error
-    ret
+	pushfq
+	pop rax ; Load RFLAGS into rax
+	mov rcx, rax ; store a copy in rcx
+	xor rax, 1 << 21 ; flip the 21st bit (CPUID)
+	push rax
+	popfq ; attempt to write it back with bit flipped
+	pushfq
+	pop rax ; read the value again to
+	push rcx
+	popfq ; write the old value back, in case our flip succeeded
+	cmp rax, rcx ; compare the retrieved value with our copy; iff the bit flipped CPUID is supported
+	je .cpuid_error
+	ret
 .cpuid_error:
-    mov eax, ERROR_CPUID
-    jmp error
+	mov eax, ERROR_CPUID
+	jmp error
+
+check_longmode:
+	mov eax, 0x80000000 ; request extended functions
+	cpuid
+	cmp eax, 0x80000004 ; if result is less than this, extended functions aren't supported
+	jb .extended_func_error
+
+	; see https://en.wikipedia.org/wiki/CPUID#EAX.3D80000000h:_Get_Highest_Extended_Function_Supported
+	mov eax, 0x80000001 ; request extended processor info
+	cpuid
+	test edx, 1 << 29
+	jz .longmode_error
+	ret
+.extended_func_error:
+	mov eax, ERROR_EFUNC
+	jmp error
+.longmode_error:
+	mov eax, ERROR_LONGMODE
+	jmp error
 
 ; Prints an error code to the screen and halts.
-ERROR_MULTIBOOT equ 0x4f554f4d
-ERROR_CPUID equ 0x4f554f43
+ERROR_MULTIBOOT equ 0x4f554f4d ; "MU"
+ERROR_CPUID equ 0x4f554f43 ; "CU"
+ERROR_LONGMODE equ 0x4f4f4f4c ; "LO"
+ERROR_EFUNC equ 0x4f464f45 ; "EF"
 error:
 	mov dword [0xb8000], 0x4f524f45
 	mov dword [0xb8004], 0x4f3a4f52
