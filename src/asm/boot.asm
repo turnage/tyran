@@ -40,6 +40,8 @@ _start:
 	call check_multiboot
 	call check_cpuid
 	call check_longmode
+	call init_paging
+	;call enter_longmode
 	call kernel_main
 	hlt
 
@@ -106,19 +108,46 @@ init_paging:
 	PRESENT equ 0b1
 	WRITEABLE equ 0b10
 	DEFAULT_FLAGS equ (PRESENT + WRITEABLE)
-	HUGE_PAGE equ 0b10000000
+	HUGE_PAGE equ 0b1000000
+	PAGE_SIZE equ 0x200000
 
 	mov eax, pdpt
-	or eax, 0b11
+	or eax, DEFAULT_FLAGS
 	mov [pml4], eax
 
 	mov eax, pdt
-	or eax, 0b11
-	mov [pdt], eax
+	or eax, DEFAULT_FLAGS
+	mov [pdpt], eax
 
+	mov ecx, 0 ; page index
 .map_pdt:
-	mov eax, 0x200000
+	mov eax, PAGE_SIZE
 	mul ecx
-	or eax, 0b1000011
+	or eax, (HUGE_PAGE + DEFAULT_FLAGS)
+	mov [pdt + ecx + 8], eax
+
+	ret
+
+enter_longmode:
+	PHYS_ADDR_EXT equ 1 << 5
+	EFER_MSR_CODE equ 0xc0000080
+	LONG_MODE equ 1 << 8
+	PAGING equ 1 << 31
+
+	mov rax, pml4
+	mov cr3, rax
+
+	mov rax, cr4
+	or rax, PHYS_ADDR_EXT
+	mov cr4, rax
+
+	mov ecx, EFER_MSR_CODE
+	rdmsr
+	or eax, LONG_MODE
+	wrmrsr
+
+	mov rax, cr0
+	or rax, PAGING
+	mov cr0, rax
 
 	ret
