@@ -109,8 +109,9 @@ init_paging:
 	PRESENT equ 0b1
 	WRITEABLE equ 0b10
 	DEFAULT_FLAGS equ (PRESENT + WRITEABLE)
-	HUGE_PAGE equ 0b1000000
+	HUGE_PAGE equ 0b10000000
 	PAGE_SIZE equ 0x200000
+	TOTAL_ENTRIES equ 512
 
 	mov eax, pdpt
 	or eax, DEFAULT_FLAGS
@@ -125,7 +126,11 @@ init_paging:
 	mov eax, PAGE_SIZE
 	mul ecx
 	or eax, (HUGE_PAGE + DEFAULT_FLAGS)
-	mov [pdt + ecx + 8], eax
+	mov [pdt + ecx * 8], eax
+
+	inc ecx
+	cmp ecx, TOTAL_ENTRIES
+	jne .map_pdt
 
 	ret
 
@@ -145,10 +150,10 @@ enter_longmode:
 	mov ecx, EFER_MSR_CODE
 	rdmsr
 	or eax, LONG_MODE
-	wrmrsr
+	wrmsr
 
-	;mov eax, cr0
-	;or eax, PAGING
-	;mov cr0, eax
+	mov eax, cr0
+	or eax, PAGING
+	mov cr0, eax
 
 	ret
