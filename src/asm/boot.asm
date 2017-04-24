@@ -1,4 +1,5 @@
 extern kernel_main
+bits 32
 
 section .boot
 MULTIBOOT2C equ 0xe85250d6
@@ -41,7 +42,7 @@ _start:
 	call check_cpuid
 	call check_longmode
 	call init_paging
-	;call enter_longmode
+	call enter_longmode
 	call kernel_main
 	hlt
 
@@ -56,17 +57,17 @@ check_multiboot:
 	jmp error
 
 check_cpuid:
-	pushfq
-	pop rax ; Load RFLAGS into rax
-	mov rcx, rax ; store a copy in rcx
-	xor rax, 1 << 21 ; flip the 21st bit (CPUID)
-	push rax
-	popfq ; attempt to write it back with bit flipped
-	pushfq
-	pop rax ; read the value again to
-	push rcx
-	popfq ; write the old value back, in case our flip succeeded
-	cmp rax, rcx ; compare the retrieved value with our copy; iff the bit flipped CPUID is supported
+	pushfd
+	pop eax ; Load RFLAGS into rax
+	mov ecx, eax ; store a copy in rcx
+	xor eax, 1 << 21 ; flip the 21st bit (CPUID)
+	push eax
+	popfd ; attempt to write it back with bit flipped
+	pushfd
+	pop eax ; read the value again to
+	push ecx
+	popfd ; write the old value back, in case our flip succeeded
+	cmp eax, ecx ; compare the retrieved value with our copy; iff the bit flipped CPUID is supported
 	je .cpuid_error
 	ret
 .cpuid_error:
@@ -134,20 +135,20 @@ enter_longmode:
 	LONG_MODE equ 1 << 8
 	PAGING equ 1 << 31
 
-	mov rax, pml4
-	mov cr3, rax
+	mov eax, pml4
+	mov cr3, eax
 
-	mov rax, cr4
-	or rax, PHYS_ADDR_EXT
-	mov cr4, rax
+	mov eax, cr4
+	or eax, PHYS_ADDR_EXT
+	mov cr4, eax
 
 	mov ecx, EFER_MSR_CODE
 	rdmsr
 	or eax, LONG_MODE
 	wrmrsr
 
-	mov rax, cr0
-	or rax, PAGING
-	mov cr0, rax
+	;mov eax, cr0
+	;or eax, PAGING
+	;mov cr0, eax
 
 	ret
