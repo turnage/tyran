@@ -18,6 +18,20 @@ header_start:
 	dd 8
 header_end:
 
+section .rodata:
+; https://en.wikipedia.org/wiki/Global_Descriptor_Table
+GDT_EXECUTABLE equ (1<<43)
+GDT_PRESENT equ (1<<47)
+GDT_DATA_CODE equ (1<<44)
+GDT_64BIT equ (1<<53)
+gdt:
+	dq 0
+.code: equ $ - gdt
+	dq (GDT_EXECUTABLE + GDT_PRESENT + GDT_DATA_CODE + GDT_64BIT)
+.pointer:
+	dw $ - gdt - 1
+	dq gdt
+
 section .bss
 ; Stack
 align 16
@@ -43,8 +57,7 @@ _start:
 	call check_longmode
 	call init_paging
 	call enter_longmode
-	call kernel_main
-	hlt
+	call enter_64bit
 
 ; checks that the kernel was loaded by a multiboot bootloader.
 check_multiboot:
@@ -157,3 +170,12 @@ enter_longmode:
 	mov cr0, eax
 
 	ret
+
+enter_64bit:
+	lgdt [gdt.pointer]
+	jmp gdt.code:start_64
+
+start_64:
+	bits 64
+	call kernel_main
+	hlt
